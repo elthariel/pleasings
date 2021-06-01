@@ -23,7 +23,7 @@ def yarn_library(name, version, package_name=None, out=None, hashes=None, test_o
       deps (list): Any other dependencies of the rule.
     """
     package_name = package_name or name
-    url = 'https://registry.yarnpkg.com/%s/-/%s-%s.tgz' % (package_name, basename(package_name, version)
+    url = 'https://registry.yarnpkg.com/%s/-/%s-%s.tgz' % (package_name, basename(package_name), version)
     cmd = 'echo "Fetching %s..." && curl -fsSL %s | tar -xz --no-same-owner --no-same-permissions && mv package $OUT' % (url, url)
     if patches:
         cmd += ' && for SRC in $SRCS; do patch -p0 -l -i $SRC; done'
