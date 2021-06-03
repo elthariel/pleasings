@@ -188,7 +188,7 @@ def container_image(
         data += base_images
         cmds += ['tmp_dir=\\\$(mktemp -d)', f'ln -s $(out_location {image_rule})/* \\\$tmp_dir']
         for base in base_images:
-            cmds += [f'ln -s $(out_location {base})/blobs/sha256/* "\\\$tmp_dir/blobs/sha256"']
+            cmds += ['mkdir -p "\\\$tmp_dir/blobs/sha256"',  f'ln -s $(out_location {base})/blobs/sha256/* "\\\$tmp_dir/blobs/sha256"']
         img_loc = f'oci:\\\$tmp_dir'
     else:
         img_loc = f'oci:$(out_location {image_rule})'
