@@ -190,7 +190,7 @@ def container_image(
     if srcs_dict.get('base'):
         base_images = transitive_base_images + srcs_dict['base']
         data += base_images
-        cmds += [f'tmp_dir=\\\$(TMPDIR"{oci_tmpdir}" mktemp -d)', f'cp -rl $(out_location {image_rule})/* \\\$tmp_dir']
+        cmds += [f'tmp_dir=\\\$(TMPDIR="{oci_tmpdir}" mktemp -d)', f'cp -rl $(out_location {image_rule})/* \\\$tmp_dir']
         for base in base_images:
             cmds += [f'cp -l $(out_location {base})/blobs/sha256/* "\\\$tmp_dir/blobs/sha256"']
         img_loc = f'oci:\\\$tmp_dir'
