@@ -1,7 +1,8 @@
 def container_image(
     name:str, base_image='', transitive_base_images=[], srcs=[],image='', version='', dockerfile='',
     containerfile='', entrypoint=[], cmd=[], repo=CONFIG.get('DEFAULT_DOCKER_REPO', ''),
-    labels=[], run_args:str='', push_args:str='', test_only=False, visibility:list=None
+    oci_tmpdir=CONFIG.get('OCI_TMPDIR', '/tmp'), labels=[], run_args:str='', push_args:str='',
+    test_only=False, visibility:list=None
 ):
     """Build an OCI-compliant image. Uses incremental layering to optimise for please. The OCI
     Specification standardises the docker image format https://github.com/opencontainers/image-spec.
@@ -29,6 +30,9 @@ def container_image(
       cmd: (when not using containerfile) The 'cmd' of the image, as a list of commands. For
            single-source images, defaults to a command running that source.
       repo: Optional repository to hold this image. Can also provide env var when calling '_push'.
+      oci_tmpdir: If your code and /tmp are in different file systems, the hard-link used by this rule 
+            will not work. In that case, use the config option or this parameter.
+
       labels: Labels to tag this rule with.
       run_args: Any additional arguments to provide to 'podman run'.
       push_args: Any additional arguments to provide to 'skopeo copy'.
@@ -113,10 +117,6 @@ def container_image(
         # commit the image and remove the working container
         cmds += [f'$TOOL commit --omit-timestamp "$ctr" "{img_id}"']
         return img_id, cmds
-
-    # If your code and /tmp are in different file systems, the hard-link will not work. In that
-    # case, you can override OCI_TMPDIR in your [buildenv]    
-    oci_tmpdir=CONFIG.get('OCI_TMPDIR', '/tmp')
     
     # image rule, builds the image and stores it as an oci-formatted dir.
     srcs_dict = {}
@@ -190,7 +190,7 @@ def container_image(
     if srcs_dict.get('base'):
         base_images = transitive_base_images + srcs_dict['base']
         data += base_images
-        cmds += ['tmp_dir=\\\$(TMPDIR=${oci_tmpdir} mktemp -d)', f'cp -rl $(out_location {image_rule})/* \\\$tmp_dir']
+        cmds += ['tmp_dir=\\\$(TMPDIR\"${oci_tmpdir}\" mktemp -d)', f'cp -rl $(out_location {image_rule})/* \\\$tmp_dir']
         for base in base_images:
             cmds += [f'cp -l $(out_location {base})/blobs/sha256/* "\\\$tmp_dir/blobs/sha256"']
         img_loc = f'oci:\\\$tmp_dir'
